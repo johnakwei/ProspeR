@@ -40,7 +40,7 @@ Instructions:
 2) Format investor data with "Access_Data.R"
 3) "Verify_Credentials.R" has functions to verify "header" and "investor data" accuracy.
 4) Obtain a prosper.com API token with "Token_Request.R"
-5) Obtain authorization to access the prosper.com API with "Authoriztion.R"
+5) Obtain authorization to access the prosper.com API with "Authorization.R"
 6) Download account information with "Account_Summary.R"
 7) Download available cash information with "Available_Cash.R"
 8) Download investor notes owned information with "Notes.R"
