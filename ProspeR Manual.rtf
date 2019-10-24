@@ -1,0 +1,589 @@
+{\rtf1\ansi\deff0\nouicompat{\fonttbl{\f0\fnil\fcharset0 Calibri;}}
+{\colortbl ;\red0\green0\blue255;}
+{\*\generator Riched20 10.0.17763}\viewkind4\uc1 
+\pard\sl240\slmult1\f0\fs22\lang9 ##################################################\par
+##################################################\par
+##\par
+## ProspeR Manual\par
+##\par
+## All programming by\par
+## John Akwei, ECMp ERMp Data Scientist\par
+## ContextBase\par
+## {{\field{\*\fldinst{HYPERLINK https://contextbase.github.io }}{\fldrslt{https://contextbase.github.io\ul0\cf0}}}}\f0\fs22\par
+##\par
+## Email: johnakwei1@gmail.com\par
+##\par
+##################################################\par
+##################################################\par
+\par
+##################################################\par
+##################################################\par
+##\par
+## Package Description\par
+##\par
+##################################################\par
+##################################################\par
+\par
+# ProspeR is an R package for accessing the functions of the Prosper API.\par
+#\par
+# {{\field{\*\fldinst{HYPERLINK www.prosper.com }}{\fldrslt{www.prosper.com\ul0\cf0}}}}\f0\fs22  is a peer to peer lending marketplace that\par
+# connects individuals who need a low rate personal loan\par
+# to individuals who have money to lend. Each loan is funded\par
+# by a combination of several people from all over the United\par
+# States. The ProspeR R programming language package is built\par
+# to assist the investor in managing their prosper.com account.\par
+\par
+# ProspeR Package Functions:\par
+# 1) Formats Investor's prosper.com API Credentials\par
+# 2) Account Summary\par
+# 3) Available Cash Report\par
+# 4) Loans Report\par
+# 5) Notes Report\par
+# 6) Creates Orders\par
+# 7) Payment History Report\par
+# 8) Pending Tranfers Report\par
+# 9) Portfolios Report\par
+# 10) Creates Portfolios\par
+\par
+##################################################\par
+##################################################\par
+##\par
+## Prosper R Package Directory\par
+##\par
+##################################################\par
+##################################################\par
+\par
+# 1) Access_Header.R\par
+# 2) Access_Data.R\par
+# 3) Verify_Credentials.R\par
+# 4) Token_Request.R\par
+# 5) Authorization.R\par
+# 6) Account_Summary.R\par
+# 7) Available_Cash.R\par
+# 8) Notes.R\par
+# 9) Loans.R\par
+# 10) Create_Orders.R\par
+# 11) Payments.R\par
+# 12) Pending_Transfers.R\par
+# 13) Portfolios.R\par
+# 14) Create_Portfolio.R\par
+\par
+##################################################\par
+##################################################\par
+##\par
+## Access_Header.R\par
+##\par
+##################################################\par
+##################################################\par
+\par
+library(httr)\par
+library(jsonlite)\par
+\par
+# Create Prosper authorization headers\par
+Access_Header <- function()\{\par
+  headers <- gsub("\\\\[|\\\\]", "",\par
+                  toJSON(data.frame(Accept='application/json',\par
+                      `Content-Type` = 'application/json')))\par
+  headers\par
+  \}\par
+\par
+# Example\par
+# header <- Access_Header()\par
+# header\par
+# \{"accept":"application/json","Content.Type":"application/x-www-form-urlencoded"\}\par
+\par
+##################################################\par
+##################################################\par
+##\par
+## Access_Data.R\par
+##\par
+##################################################\par
+##################################################\par
+\par
+# AccessData function\par
+Access_Data <- function(investorID, investorSecret,\par
+                       prosperUsername, prosperPassword)\{\par
+  data <- toJSON(data.frame(list(\par
+    grant_type='password',\par
+    client_id=investorID,\par
+    client_secret=investorSecret,\par
+    username=prosperUsername,\par
+    password=prosperPassword\par
+  )))\par
+  data\par
+\}\par
+\par
+# Example\par
+# payload <- Access_Data(clientid, clientsecret,clientusername,\par
+#                        clientpassword)\par
+# payload\par
+\par
+##################################################\par
+##################################################\par
+##\par
+## Verify_Credentials.R\par
+##\par
+##################################################\par
+##################################################\par
+\par
+Check_Header <- function(x = NULL)\{\par
+  # If "header" is null, then a value was not passed in\par
+  # the calling function. If it isn't null, then return it.\par
+  if(!is.null(x)) \{\par
+    return(x)\par
+    \} else \{\par
+      stop("Please create the header object using the AccessHeader() function",\par
+           call.= FALSE)\par
+    \}\par
+  # If header is null, then check if it exists in the global\par
+  # environment\par
+  if (!exists("header", envir= .GlobalEnv))\{\par
+    stop("Please create the header object using the AccessHeader() function",\par
+         call.= FALSE)\par
+  \}\par
+  get("header")\par
+\}\par
+\par
+# Example\par
+# Check_Header(header)\par
+\par
+Check_Data <- function(x = NULL)\{\par
+  # If data is null, then a value was not passed in the calling\par
+  # function. If it isn't null, then return it.\par
+  if(!is.null(x)) \{\par
+     return(x)\par
+    \} else \{\par
+      stop("Please create the data object using the AccessData() function",\par
+           call.= FALSE)\par
+    \}\par
+  # If data is null, then check if it exists in the global environment\par
+  if (!exists("data", envir= .GlobalEnv))\{\par
+    stop("Please create the data object using the AccessData() function",\par
+         call.= FALSE)\par
+  \}\par
+  get("data")\par
+\}\par
+\par
+# Example\par
+# Check_Data(data)\par
+\par
+Response_Handler <- function(r)\{\par
+  if (http_error(r)) \{\par
+    x <- status_code(r)\par
+    message(\par
+      case_when(\par
+        x %% 403 == 0 ~ "Authentication failure",\par
+        x %% 500 == 0 ~ "Unsuccessful execution",\par
+        TRUE ~ sprintf("Prosper API request failed")))\par
+  \}\par
+\}\par
+\par
+##################################################\par
+##################################################\par
+##\par
+## Token_Request.R\par
+##\par
+##################################################\par
+##################################################\par
+\par
+# A function to obtain the token for Prosper API authorization.\par
+\par
+# "requestURL", the prosper.com authorization url, i.e.\par
+# "{{\field{\*\fldinst{HYPERLINK https://api.prosper.com/v1/accounts/prosper/ }}{\fldrslt{https://api.prosper.com/v1/accounts/prosper/\ul0\cf0}}}}\f0\fs22 "\par
+# "requestHeader", the request header from "Access_Header()"\par
+# "data", a dataframe created with "Access_Data()"\par
+\par
+Token_Request <- function(requestURL, requestHeader, data)\{\par
+    prosper_endpoints <- oauth_endpoint(NULL, "authorize",\par
+                                        "accessToken",\par
+                                        base_url = requestURL)\par
+    prosper_app <- oauth_app("prosper_endpoints",\par
+                             key = data[[1]]$client_id,\par
+                             secret = data[[1]]$client_secret)\par
+    prosper_token <-  oauth2.0_token(prosper_endpoints,\par
+                                     prosper_app,\par
+                                     config_init = requestHeader,\par
+                                     user_params = data[[1]])\par
+\par
+    if(status_code(prosper_token)!=200)\{\par
+      stop("Failed to auth", status_code(prosper_token))\}\par
+\par
+    parsed <- fromJSON(content(prosper_token,\par
+                               "text", encoding="UTF-8"),\par
+                       simplifyVector = TRUE)\par
+\par
+    if(httr::http_error(prosper_token)) \{\par
+      stop(sprintf(\par
+          "Prosper API authization request failed [%s]\\n%s\\n<%s>",\par
+          status_code(prosper_token), parsed$message,\par
+          parsed$documentation_url),\par
+        call. = FALSE)\par
+      \}\par
+\par
+    structure(list(content = parsed, response = prosper_token),\par
+      class = "Prosper_API")\par
+    \}\par
+\par
+# Example\par
+#\par
+# Request_URL <- '{{\field{\*\fldinst{HYPERLINK https://api.prosper.com/v1/security/oauth/token }}{\fldrslt{https://api.prosper.com/v1/security/oauth/token\ul0\cf0}}}}\f0\fs22 '\par
+# header <- Access_Header()\par
+# clientid <- "<prosper.com client id>"\par
+# clientsecret <- "<prosper.com client secret>"\par
+# clientusername <- "<prosper.com username>"\par
+# clientpassword <- "<prosper.com password>"\par
+# data <- AccessData(clientid, clientsecret,\par
+#                    clientusername,\par
+#                    clientpassword)\par
+# Token_Request(Request_URL, header, data)\par
+\par
+##################################################\par
+##################################################\par
+##\par
+## Authorization.R\par
+##\par
+##################################################\par
+##################################################\par
+\par
+# A wrapper to obtain the authorization key for\par
+# access to the Prosper API.\par
+# "authURL", the prosper.com authorization url\par
+# "AuthHeader", authorization header from "AuthHeader()"\par
+# "data", a list created with the "AuthData()"\par
+# "auth", a prosper authorization key from "RequestToken.R"\par
+\par
+Authorization <- function(authURL, authKey)\{\par
+  response <- POST(authURL, encode="json",\par
+            add_headers("Accept": "application/json",\par
+                        "Authorization": "bearer",\par
+                        oauthToken.access_token))\par
+  response\par
+  \}\par
+\par
+\par
+# Example\par
+#\par
+# Prosper_Base_Address <- "{{\field{\*\fldinst{HYPERLINK https://api.prosper.com/v1/ }}{\fldrslt{https://api.prosper.com/v1/\ul0\cf0}}}}\f0\fs22 "\par
+# auth <- "<authoriztion key>"\par
+# Authorization(Prosper_Base_Address, auth)\par
+\par
+##################################################\par
+##################################################\par
+##\par
+## AccountSummary.R\par
+##\par
+##################################################\par
+##################################################\par
+\par
+# Accesses the user's account and return the summary data.\par
+# The data points include available cash, total account balance,\par
+# and the number of notes in the portfolio.\par
+\par
+Accounts <- function(searchURL)\{\par
+  searchURL <- paste0(searchURL, "/", "summary", sep="")\par
+\par
+  r <- GET(searchURL,\par
+           add_headers("Accept": "application/json",\par
+                       "Authorization": "bearer",\par
+                       oauthToken.access_token))\par
+\par
+  if(httr::status_code(r)!=200)\{\par
+    stop("Prosper API request failed")\}\par
+\par
+  parsed <- fromJSON(content(r, "text", encoding="UTF-8"),\par
+                               simplifyVector = TRUE)\par
+\par
+  if (httr::http_error(r)) \{\par
+    stop(sprintf("Prosper API request failed [%s]\\n%s\\n<%s>",\par
+        status_code(r), parsed$message, parsed$documentation_url\par
+      ), call. = FALSE)\par
+  \}\par
+\par
+  parsed <- \{y <- unlist(parsed)\par
+    data.frame("Field"= names(y), "Value"= as.character(y),\par
+               stringsAsFactors = F, row.names = NULL)\par
+    \}\par
+\par
+  structure(list(content = parsed, response = r),\par
+    class = "Prosper_API")\par
+\}\par
+\par
+# Example\par
+#\par
+# Prosper_Base_Address <- "{{\field{\*\fldinst{HYPERLINK https://api.prosper.com/v1 }}{\fldrslt{https://api.prosper.com/v1\ul0\cf0}}}}\f0\fs22 "\par
+# clientID <- "b7cdc9351d6d41c984bca165f00dd52e"\par
+# auth <- "1098273"\par
+# Accounts <- Accounts(Prosper_Base_Address, clientid, auth)\par
+\par
+##################################################\par
+##################################################\par
+##\par
+## Available_Cash.R\par
+##\par
+##################################################\par
+##################################################\par
+\par
+# Retrieves the available cash in the user's account. Cash\par
+# committed to open buy orders is excluded from the total.\par
+\par
+Available_Cash <- function()\{\par
+  r <- GET(paste0("https://api.prosper.com/v1/accounts/prosper/",\par
+             "?", "filters=AVAILABLE_CASH", sep=""))\par
+\par
+  if (httr::http_error(r)) \{\par
+    stop(sprintf("Prosper API request failed [%s]\\n%s\\n<%s>",\par
+        status_code(r), parsed$message,\par
+        parsed$documentation_url),\par
+      call. = FALSE)\par
+  \}\par
+  content(r)\par
+  \}\par
+\par
+# Example\par
+# Available_Cash()\par
+\par
+##################################################\par
+##################################################\par
+##\par
+## Notes.R\par
+##\par
+##################################################\par
+##################################################\par
+\par
+# Report of the investor's notes owned\par
+\par
+Notes <- function()\{\par
+  r <- GET("https://api.prosper.com/v1/notes")\par
+\par
+  if (httr::http_error(r)) \{\par
+    stop(sprintf("Prosper API request failed [%s]\\n%s\\n<%s>",\par
+        status_code(r),parsed$message, parsed$documentation_url),\par
+      call. = FALSE)\par
+  \}\par
+  content(r)\par
+\}\par
+\par
+# Example\par
+# Notes()\par
+\par
+##################################################\par
+##################################################\par
+##\par
+## Loans.R\par
+##\par
+##################################################\par
+##################################################\par
+\par
+# Listing of all loans on the primary market\par
+#\par
+# showAll (logical), indicates whether all loans should be retured.\par
+# Use FALSE to limit the results to those loans listed in the most recent\par
+# listing period.\par
+\par
+Loans <- function(showAll=TRUE)\{\par
+  searchURL <- "{{\field{\*\fldinst{HYPERLINK https://api.prosper.com/v1/loans/ }}{\fldrslt{https://api.prosper.com/v1/loans/\ul0\cf0}}}}\f0\fs22 "\par
+  r <- GET(searchURL, query=list("showAll" = showAll))\par
+  r\par
+\}\par
+\par
+# Example\par
+# Loans()\par
+\par
+##################################################\par
+##################################################\par
+##\par
+## Orders.R\par
+##\par
+##################################################\par
+##################################################\par
+\par
+# Submit a new investment order\par
+\par
+SubmitOrder <- function(loanId, amount)\{\par
+  postURL <- "{{\field{\*\fldinst{HYPERLINK https://api.prosper.com/v1/orders/ }}{\fldrslt{https://api.prosper.com/v1/orders/\ul0\cf0}}}}\f0\fs22 "\par
+  orders <- data.frame("loanId" = loanId,\par
+                      "requestedAmount" = amount)\par
+\par
+  orders <- as.data.frame(cbind(orders, portfolioId),\par
+                           stringsAsFactors=F)\par
+\par
+  params <- list("aid" = investorID, "orders"= orders)\par
+  resp <- POST(postURL, params)\par
+\}\par
+\par
+# Example\par
+#\par
+# loan_id <- "<prosper loan id>"\par
+# SubmitOrder(loan_id, amount=25)\par
+\par
+##################################################\par
+##################################################\par
+##\par
+## Payments.R\par
+##\par
+##################################################\par
+##################################################\par
+\par
+# The payments API allows you to retrieve the payment history\par
+# on a single loan, or a list of loans that you own. If you\par
+# have purchased a Note on the loan, the payments API will\par
+# return historical payment history on your pro-rata portion\par
+# of the loan. The payments API returns all payments in historical order in\par
+# which the loan payments have been made. If you pass in multiple\par
+# loan numbers as query parameters to the API, you will receive\par
+# payments made to the loans in historical order.\par
+\par
+# GET /loans/payments/?loan_number=\{loan_number\}\par
+# GET /loans/payments/?loan_number=\{loan_number1\},\{loan_number2\},\{loan_number3\}\par
+\par
+Payments <- function(showAll=TRUE)\{\par
+  searchURL <- "{{\field{\*\fldinst{HYPERLINK https://api.prosper.com/v1/loans/payments/ }}{\fldrslt{https://api.prosper.com/v1/loans/payments/\ul0\cf0}}}}\f0\fs22 "\par
+  result <- GET(searchURL, query=list("showAll" = showAll))\par
+  result\par
+\}\par
+\par
+# Example\par
+Payments(showAll=TRUE)\par
+\par
+##################################################\par
+##################################################\par
+##\par
+## Pending_Transfers.R\par
+##\par
+##################################################\par
+##################################################\par
+\par
+# Return investor's pending transfers\par
+\par
+Pending_Transfers <- function(authKey)\{\par
+  searchURL <- paste0("https://api.prosper.com/v1/accounts/prosper/",\par
+                      "?", "funds/pending", sep="")\par
+\par
+  r <- GET(searchURL,\par
+           add_headers("Accept": "application/json",\par
+                       "Authorization": "bearer ",\par
+                       authKey))\par
+\par
+  if(httr::status_code(r)!=200)\{\par
+    stop("Prosper API request failed")\}\par
+\par
+  parsed<- fromJSON(content(r, "text", encoding="UTF-8"),\par
+                              simplifyVector = TRUE)\par
+\par
+  if (http_error(r)) \{\par
+    stop(sprintf("Prosper API request failed [%s]\\n%s\\n<%s>",\par
+        status_code(r), parsed$message, parsed$documentation_url\par
+      ), call. = FALSE)\par
+    \}\par
+\par
+  parsed <- \{y<- unlist(parsed)\par
+    data.frame("Field"= names(y), "Value"= as.character(y),\par
+               stringsAsFactors = F, row.names = NULL)\}\par
+\par
+  structure(list(content = parsed, response = r),\par
+    class = "Prosper_API")\par
+  \}\par
+\par
+# Example\par
+#\par
+# auth <- "<prosper api authentication key>"\par
+# Pending_Transfers(auth)\par
+\par
+##################################################\par
+##################################################\par
+##\par
+## Portfolios.R\par
+##\par
+##################################################\par
+##################################################\par
+\par
+# Listing of investor's portfolios\par
+\par
+# Provides a dataframe of all portfolios owned by the investor.\par
+\par
+Portfolios <- function()\{\par
+  searchURL <- paste0("https://api.prosper.com/v1/accounts/prosper/",\par
+                      "?", "portfolios", sep="")\par
+  r <- GET(searchURL)\par
+  r\par
+\}\par
+\par
+# Example\par
+# Portfolios()\par
+\par
+##################################################\par
+##################################################\par
+##\par
+## Create_Portfolio.R\par
+##\par
+##################################################\par
+##################################################\par
+\par
+# Create a new portfolio\par
+#\par
+# Create a new portfolio to assign loans to. Notes can be assigned to\par
+# a portfolio using the API when they are purhcased from the primary\par
+# market.\par
+#\par
+#  port_name String. Name of the new portfolio\par
+#  port_desc String. Portfolio description\par
+\par
+Create_Portfolio <- function(investorID, port_name,\par
+                             port_desc, authKey)\{\par
+  postURL <- paste0(investorID,"portfolios")\par
+  params <- list("actorId" = investorID,\par
+                 "portfolioName" = port_name,\par
+                 "portfolioDescription" = port_desc)\par
+  resp <- POST(postURL, params, authKey)\par
+  \}\par
+\par
+# Example\par
+#\par
+# clientid <- "<prosper api key>"\par
+# portfolio_name <- "<portfolio name>"\par
+# portfolio_desc <- "<portfolio description>"\par
+# auth <- "<prosper api authorization key>"\par
+# Create_Portfolio(clientid, portfolio_name,\par
+#                  portfolio_desc, auth)\par
+\par
+##################################################\par
+##################################################\par
+##\par
+## References\par
+##\par
+##################################################\par
+##################################################\par
+\par
+# Prosper API Wrapper Library\par
+# {{\field{\*\fldinst{HYPERLINK https://github.com/jsumner5/Prosper-Api-Wrapper-Library }}{\fldrslt{https://github.com/jsumner5/Prosper-Api-Wrapper-Library\ul0\cf0}}}}\f0\fs22\par
+# {{\field{\*\fldinst{HYPERLINK https://github.com/bdelliott/prosper }}{\fldrslt{https://github.com/bdelliott/prosper\ul0\cf0}}}}\f0\fs22\par
+\par
+# Assign Orders to Portfolios\par
+# {{\field{\*\fldinst{HYPERLINK https://github.com/Friede80/Prosper/blob/master/Prosper.hs }}{\fldrslt{https://github.com/Friede80/Prosper/blob/master/Prosper.hs\ul0\cf0}}}}\f0\fs22\par
+\par
+# {{\field{\*\fldinst{HYPERLINK https://cran.r-project.org/web/packages/httr/vignettes/quickstart.html }}{\fldrslt{https://cran.r-project.org/web/packages/httr/vignettes/quickstart.html\ul0\cf0}}}}\f0\fs22\par
+# {{\field{\*\fldinst{HYPERLINK https://cran.r-project.org/web/packages/LendingClub/LendingClub.pdf }}{\fldrslt{https://cran.r-project.org/web/packages/LendingClub/LendingClub.pdf\ul0\cf0}}}}\f0\fs22\par
+# {{\field{\*\fldinst{HYPERLINK https://github.com/kuhnr130/LendingClub }}{\fldrslt{https://github.com/kuhnr130/LendingClub\ul0\cf0}}}}\f0\fs22\par
+# {{\field{\*\fldinst{HYPERLINK https://www.google.com/search?rlz=1C1SQJL_enUS848US848&sxsrf=ACYBGNRU3mqdFwjEVhOaBjGckD1jGO3KYA%3A1571260430362&lei=DoinXZLeFePM5gKT4oDoBw&q=httr%20post%20content%20type&ved=2ahUKEwiutqmf2aHlAhXOV98KHU4JAOoQsKwBKAB6BAgBEAE&biw=1366&bih=625 }}{\fldrslt{https://www.google.com/search?rlz=1C1SQJL_enUS848US848&sxsrf=ACYBGNRU3mqdFwjEVhOaBjGckD1jGO3KYA%3A1571260430362&lei=DoinXZLeFePM5gKT4oDoBw&q=httr%20post%20content%20type&ved=2ahUKEwiutqmf2aHlAhXOV98KHU4JAOoQsKwBKAB6BAgBEAE&biw=1366&bih=625\ul0\cf0}}}}\f0\fs22\par
+# {{\field{\*\fldinst{HYPERLINK https://developers.prosper.com/docs/authenticating-with-oauth-2-0/authorization-key-flow/ }}{\fldrslt{https://developers.prosper.com/docs/authenticating-with-oauth-2-0/authorization-key-flow/\ul0\cf0}}}}\f0\fs22\par
+\par
+# API documentation is at\par
+# {{\field{\*\fldinst{HYPERLINK https://developers.prosper.com/docs/investor/accounts-api/ }}{\fldrslt{https://developers.prosper.com/docs/investor/accounts-api/\ul0\cf0}}}}\f0\fs22\par
+# {{\field{\*\fldinst{HYPERLINK https://developers.prosper.com/docs/authenticating-with-oauth-2-0/password-flow/#oauth_password_flow_curl_and_python_examples }}{\fldrslt{https://developers.prosper.com/docs/authenticating-with-oauth-2-0/password-flow/#oauth_password_flow_curl_and_python_examples\ul0\cf0}}}}\f0\fs22\par
+\par
+##################################################\par
+##################################################\par
+##\par
+## API Test Code\par
+##\par
+##################################################\par
+##################################################\par
+\par
+# Basic API access code\par
+r <- GET("http://httpbin.org/get")\par
+status_code(r)\par
+headers(r)$date\par
+str(content(r))\par
+rm(r)\par
+}
+ 
