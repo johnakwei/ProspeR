@@ -1,0 +1,20 @@
+Package: ProspeR
+Type: Package
+Title: ProspeR accesses the functions of the prosper.com API
+Version: 0.1.0
+Imports:
+    httr,
+    jsonlite
+Author: John Akwei, ECMp ERMp Data Scientist
+Maintainer: John Akwei <johnakwei1@gmail.com>
+Description: ProspeR is an R package for accessing the functions of the Prosper API.
+    
+www.prosper.com is a peer to peer lending marketplace that
+connects individuals who need a low rate personal loan
+to individuals who have money to lend. Each loan is funded
+by a combination of several people from all over the United
+States. The ProspeR R programming language package is built
+to assist the investor in managing their prosper.com account.
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
