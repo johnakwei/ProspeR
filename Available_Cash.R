@@ -6,7 +6,7 @@
 ##################################################
 ##################################################
 
-# Retrieves the available cash in the user's account. Cash 
+# Retrieves the available cash amount in the user's account. Cash 
 # committed to open buy orders is excluded from the total.
 
 Available_Cash <- function(){
