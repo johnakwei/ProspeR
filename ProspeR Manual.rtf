@@ -217,27 +217,25 @@ Token_Request <- function(requestURL, requestHeader, data){
 ##################################################
 ##################################################
 
-# A wrapper to obtain the authorization key for
-# access to the Prosper API.
-# "authURL", the prosper.com authorization url
-# "AuthHeader", authorization header from "AuthHeader()"
-# "data", a list created with the "AuthData()"
-# "auth", a prosper authorization key from "RequestToken.R"
+# A function to obtain the authorization key for access to the Prosper API.
+# "authKey", a prosper authorization key from "Token_Request.R"
 
-Authorization <- function(authURL, authKey){
-  response <- POST(authURL, encode="json",
-            add_headers("Accept": "application/json",
-                        "Authorization": "bearer",
-                        oauthToken.access_token))
+Authorization <- function(authKey){
+  response <- POST(paste0("https://api.prosper.com/v1/", authKey, sep = ""))
+  
+  if (httr::http_error(response)) {
+    stop(sprintf("Authorization failed [%s]\n%s\n<%s>",
+                 status_code(response), parsed$message, parsed$documentation_url
+    ), call. = FALSE)}
+  
   response
-  }
+}
 
 
 # Example
 #
-# Prosper_Base_Address <- "https://api.prosper.com/v1/"
 # auth <- "<authoriztion key>"
-# Authorization(Prosper_Base_Address, auth)
+# AuthoriztionKey <- Authorization(authKey)
 
 ##################################################
 ##################################################
@@ -283,24 +281,25 @@ Accounts <- function(searchURL){
 ##################################################
 ##################################################
 
-# Retrieves the available cash in the user's account. Cash
+# Retrieves the available cash amount in the user's account. Cash 
 # committed to open buy orders is excluded from the total.
 
 Available_Cash <- function(){
   r <- GET(paste0("https://api.prosper.com/v1/accounts/prosper/",
-             "?", "filters=AVAILABLE_CASH", sep=""))
-
+                  "?", "filters=AVAILABLE_CASH", sep=""))
+  
   if (httr::http_error(r)) {
     stop(sprintf("Prosper API request failed [%s]\n%s\n<%s>",
-        status_code(r), parsed$message,
-        parsed$documentation_url),
-      call. = FALSE)
+                 status_code(r), parsed$message,
+                 parsed$documentation_url),
+         call. = FALSE)
   }
-  content(r)
-  }
+  r
+}
 
 # Example
-# Available_Cash()
+# Cash_Report <- Available_Cash()
+# print(Cash_Report)
 
 ##################################################
 ##################################################
@@ -314,17 +313,20 @@ Available_Cash <- function(){
 
 Notes <- function(){
   r <- GET("https://api.prosper.com/v1/notes")
-
+  
   if (httr::http_error(r)) {
     stop(sprintf("Prosper API request failed [%s]\n%s\n<%s>",
-        status_code(r),parsed$message, parsed$documentation_url),
-      call. = FALSE)
+                 status_code(r),parsed$message, parsed$documentation_url),
+         call. = FALSE)
   }
+  
   content(r)
 }
 
 # Example
-# Notes()
+#
+# ProsperNotes <- Notes()
+# print(ProsperNotes)
 
 ##################################################
 ##################################################
@@ -343,11 +345,20 @@ Notes <- function(){
 Loans <- function(showAll=TRUE){
   searchURL <- "https://api.prosper.com/v1/loans/"
   r <- GET(searchURL, query=list("showAll" = showAll))
+  
+  if (httr::http_error(r)) {
+    stop(sprintf("Prosper API request failed [%s]\n%s\n<%s>",
+                 status_code(r), parsed$message,
+                 parsed$documentation_url),
+         call. = FALSE)
+  }
+  
   r
 }
 
 # Example
-# Loans()
+# All_Loans <- Loans()
+# print(All_Loans)
 
 ##################################################
 ##################################################
@@ -357,16 +368,16 @@ Loans <- function(showAll=TRUE){
 ##################################################
 ##################################################
 
-# Submit a new investment order
+# Submit a new investment orders to prosper.com
 
 SubmitOrder <- function(loanId, amount){
   postURL <- "https://api.prosper.com/v1/orders/"
   orders <- data.frame("loanId" = loanId,
-                      "requestedAmount" = amount)
-
+                       "requestedAmount" = amount)
+  
   orders <- as.data.frame(cbind(orders, portfolioId),
-                           stringsAsFactors=F)
-
+                          stringsAsFactors=F)
+  
   params <- list("aid" = investorID, "orders"= orders)
   resp <- POST(postURL, params)
 }
@@ -384,7 +395,7 @@ SubmitOrder <- function(loanId, amount){
 ##################################################
 ##################################################
 
-# The payments API allows you to retrieve the payment history
+# The payments API allows you to retrieve your prosper.com payment history
 # on a single loan, or a list of loans that you own. If you
 # have purchased a Note on the loan, the payments API will
 # return historical payment history on your pro-rata portion
@@ -398,12 +409,23 @@ SubmitOrder <- function(loanId, amount){
 
 Payments <- function(showAll=TRUE){
   searchURL <- "https://api.prosper.com/v1/loans/payments/"
+  
   result <- GET(searchURL, query=list("showAll" = showAll))
+  
+  if (httr::http_error(result)) {
+    stop(sprintf("Prosper API request failed [%s]\n%s\n<%s>",
+                 status_code(result), parsed$message,
+                 parsed$documentation_url),
+         call. = FALSE)
+  }
+  
   result
 }
 
 # Example
-Payments(showAll=TRUE)
+#
+# Payment_History <- Payments(showAll=TRUE)
+# print(Payment_History)
 
 ##################################################
 ##################################################
@@ -413,41 +435,38 @@ Payments(showAll=TRUE)
 ##################################################
 ##################################################
 
-# Return investor's pending transfers
+# Obtains a list of the investor's pending transfers from prosper.com.
+# "authKey" is the authorization key from "Token_Request()".
 
 Pending_Transfers <- function(authKey){
   searchURL <- paste0("https://api.prosper.com/v1/accounts/prosper/",
                       "?", "funds/pending", sep="")
-
-  r <- GET(searchURL,
-           add_headers("Accept": "application/json",
-                       "Authorization": "bearer ",
-                       authKey))
-
-  if(httr::status_code(r)!=200){
-    stop("Prosper API request failed")}
-
-  parsed<- fromJSON(content(r, "text", encoding="UTF-8"),
-                              simplifyVector = TRUE)
-
+  
+  r <- GET(searchURL, add_headers("Accept": "application/json",
+                       "Authorization": "bearer ", authKey))
+  
   if (http_error(r)) {
     stop(sprintf("Prosper API request failed [%s]\n%s\n<%s>",
-        status_code(r), parsed$message, parsed$documentation_url
-      ), call. = FALSE)
-    }
-
-  parsed <- {y<- unlist(parsed)
-    data.frame("Field"= names(y), "Value"= as.character(y),
-               stringsAsFactors = F, row.names = NULL)}
-
-  structure(list(content = parsed, response = r),
-    class = "Prosper_API")
+                 status_code(r), parsed$message, parsed$documentation_url
+    ), call. = FALSE)
   }
+  
+  parsed <- fromJSON(content(r, "text", encoding="UTF-8"),
+                    simplifyVector = TRUE)
+  
+  parsed <- {y <- unlist(parsed)
+  data.frame("Field"= names(y), "Value"= as.character(y),
+             stringsAsFactors = F, row.names = NULL)}
+  
+  structure(list(content = parsed, response = r),
+            class = "Prosper_API")
+}
 
 # Example
 #
 # auth <- "<prosper api authentication key>"
-# Pending_Transfers(auth)
+# PendingTransfers <- Pending_Transfers(auth)
+# print(PendingTranfers)
 
 ##################################################
 ##################################################
@@ -457,19 +476,25 @@ Pending_Transfers <- function(authKey){
 ##################################################
 ##################################################
 
-# Listing of investor's portfolios
-
-# Provides a dataframe of all portfolios owned by the investor.
+# Downloads a dataframe of all portfolios owned by the investor.
 
 Portfolios <- function(){
-  searchURL <- paste0("https://api.prosper.com/v1/accounts/prosper/",
-                      "?", "portfolios", sep="")
-  r <- GET(searchURL)
-  r
+
+  r <- GET("https://api.prosper.com/v1/accounts/prosper/portfolios")
+  
+  if (http_error(r)) {
+    stop(sprintf("Prosper API request failed [%s]\n%s\n<%s>",
+                 status_code(r), parsed$message, parsed$documentation_url
+    ), call. = FALSE)
+  }
+  
+  content(r)
 }
 
 # Example
-# Portfolios()
+#
+# PortfolioList <- Portfolios()
+# print(PortfolioList)
 
 ##################################################
 ##################################################
@@ -479,14 +504,14 @@ Portfolios <- function(){
 ##################################################
 ##################################################
 
-# Create a new portfolio
-#
 # Create a new portfolio to assign loans to. Notes can be assigned to
 # a portfolio using the API when they are purhcased from the primary
 # market.
 #
-#  port_name String. Name of the new portfolio
-#  port_desc String. Portfolio description
+# "investorID" is the client API Key.
+# "port_name" is the client-selected name of the new portfolio
+# "port_desc" is the client's portfolio description
+# "authKey" is the authorization key generated by "Token_Request()"
 
 Create_Portfolio <- function(investorID, port_name,
                              port_desc, authKey){
@@ -495,7 +520,7 @@ Create_Portfolio <- function(investorID, port_name,
                  "portfolioName" = port_name,
                  "portfolioDescription" = port_desc)
   resp <- POST(postURL, params, authKey)
-  }
+}
 
 # Example
 #
