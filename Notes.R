@@ -16,8 +16,11 @@ Notes <- function(){
                  status_code(r),parsed$message, parsed$documentation_url),
          call. = FALSE)
   }
+  
   content(r)
 }
 
 # Example
-# Notes()
+#
+# ProsperNotes <- Notes()
+# print(ProsperNotes)
