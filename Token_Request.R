@@ -15,8 +15,8 @@
 Token_Request <- function(requestURL, requestHeader, data){
   prosper_endpoints <- oauth_endpoint(NULL, "authorize", "accessToken",
                                       base_url = requestURL)
-  prosper_app <- oauth_app("prosper_endpoints", key = data[[1]]$client_id,
-                           secret = data[[1]]$client_secret)
+  prosper_app <- oauth_app("prosper_endpoints", key = data[2],
+                           secret = data[3])
   prosper_token <-  oauth2.0_token(prosper_endpoints, prosper_app,
                                    config_init = requestHeader, user_params = data[[1]])
   
@@ -38,8 +38,8 @@ Token_Request <- function(requestURL, requestHeader, data){
 # clientsecret <- "<prosper.com client secret>"
 # clientusername <- "<prosper.com username>"
 # clientpassword <- "<prosper.com password>"
-# data <- AccessData(clientid, clientsecret,
+# payload <- AccessData(clientid, clientsecret,
 #                    clientusername,
 #                    clientpassword)
 #
-# AuthorizationKey <- Token_Request(Request_URL, header, data)
+# AuthorizationKey <- Token_Request(Request_URL, header, payload)
