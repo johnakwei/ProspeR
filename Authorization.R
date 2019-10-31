@@ -7,7 +7,7 @@
 ##################################################
 
 # A function to obtain the authorization key for access to the Prosper API.
-# "authKey", a prosper authorization key from "RequestToken.R"
+# "authKey", a prosper authorization key from "Token_Request.R"
 
 Authorization <- function(authKey){
   response <- POST(paste0("https://api.prosper.com/v1/", authKey, sep = ""))
