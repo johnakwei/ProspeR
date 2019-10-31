@@ -42,4 +42,4 @@ Token_Request <- function(requestURL, requestHeader, data){
 #                    clientusername,
 #                    clientpassword)
 #
-# AuthToken <- Token_Request(Request_URL, header, data)
+# AuthurizationKey <- Token_Request(Request_URL, header, data)
