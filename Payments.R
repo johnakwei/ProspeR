@@ -6,7 +6,7 @@
 ##################################################
 ##################################################
 
-# The payments API allows you to retrieve the payment history
+# The payments API allows you to retrieve your prosper.com payment history
 # on a single loan, or a list of loans that you own. If you
 # have purchased a Note on the loan, the payments API will
 # return historical payment history on your pro-rata portion
@@ -25,4 +25,6 @@ Payments <- function(showAll=TRUE){
 }
 
 # Example
-# Payments(showAll=TRUE)
+#
+# Payment_History <- Payments(showAll=TRUE)
+# print(Payment_History)
