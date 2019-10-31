@@ -6,9 +6,6 @@
 ##################################################
 ##################################################
 
-library(httr)
-library(jsonlite)
-
 # Create Prosper authorization headers
 Access_Header <- function(){
   headers <- gsub("\\[|\\]", "",
