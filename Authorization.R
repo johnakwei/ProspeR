@@ -13,8 +13,8 @@
 # "data", a list created with the "AuthData()"
 # "auth", a prosper authorization key from "RequestToken.R"
 
-Authorization <- function(authURL, authKey){
-  response <- POST(authURL, encode="json",
+Authorization <- function(authKey){
+  response <- POST("https://api.prosper.com/v1/", encode="json",
                    add_headers("Accept": "application/json",
                                "Authorization": "bearer",
                                oauthToken.access_token))
@@ -24,6 +24,5 @@ Authorization <- function(authURL, authKey){
 
 # Example
 #
-# Prosper_Base_Address <- "https://api.prosper.com/v1/"
 # auth <- "<authoriztion key>"
-# Authorization(Prosper_Base_Address, auth)
+# AuthoriztionKey <- Authorization(authKey)
