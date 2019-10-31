@@ -19,8 +19,9 @@ Available_Cash <- function(){
                  parsed$documentation_url),
          call. = FALSE)
   }
-  content(r)
+  r
 }
 
 # Example
-# Available_Cash()
+# Cash_Report <- Available_Cash()
+# print(Cash_Report)
