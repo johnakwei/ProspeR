@@ -183,7 +183,8 @@ Token_Request <- function(requestURL, requestHeader, data){
   prosper_app <- oauth_app("prosper_endpoints", key = data[2],
                            secret = data[3])
   prosper_token <-  oauth2.0_token(prosper_endpoints, prosper_app,
-                                   config_init = requestHeader, user_params = data[[1]])
+                                   config_init = requestHeader,
+                                   user_params = data)
   
   if(status_code(prosper_token)!=200){
     stop("Prosper API Token Request Failed", status_code(prosper_token))}
@@ -203,9 +204,8 @@ Token_Request <- function(requestURL, requestHeader, data){
 # clientsecret <- "<prosper.com client secret>"
 # clientusername <- "<prosper.com username>"
 # clientpassword <- "<prosper.com password>"
-# payload <- AccessData(clientid, clientsecret,
-#                    clientusername,
-#                    clientpassword)
+# payload <- AccessData(client_id, client_secret, username,
+#                    password)
 #
 # AuthorizationKey <- Token_Request(Request_URL, header, payload)
 
