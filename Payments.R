@@ -20,7 +20,16 @@
 
 Payments <- function(showAll=TRUE){
   searchURL <- "https://api.prosper.com/v1/loans/payments/"
+  
   result <- GET(searchURL, query=list("showAll" = showAll))
+  
+  if (httr::http_error(result)) {
+    stop(sprintf("Prosper API request failed [%s]\n%s\n<%s>",
+                 status_code(result), parsed$message,
+                 parsed$documentation_url),
+         call. = FALSE)
+  }
+  
   result
 }
 
