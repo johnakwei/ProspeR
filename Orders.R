@@ -6,7 +6,7 @@
 ##################################################
 ##################################################
 
-# Submit a new investment order
+# Submit a new investment orders to prosper.com
 
 SubmitOrder <- function(loanId, amount){
   postURL <- "https://api.prosper.com/v1/orders/"
