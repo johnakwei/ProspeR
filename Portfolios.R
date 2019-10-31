@@ -6,7 +6,7 @@
 ##################################################
 ##################################################
 
-# downloads a dataframe of all portfolios owned by the investor.
+# Downloads a dataframe of all portfolios owned by the investor.
 
 Portfolios <- function(){
 
