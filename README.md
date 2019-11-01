@@ -38,15 +38,13 @@ Prosper R Package functions:
 Instructions:
 1) Format "header" information with the "Access_Header()" function.
 2) Format investor data with the "Access_Data()" function.
-3) "Verify_Credentials()" is a functions to verify "header" and "investor data" accuracy.
-4) Obtain a prosper.com API token with the "Token_Request()" function.
-5) Obtain authorization to access the prosper.com API with the "Authorization()" function.
-6) Download account information with the "Account_Summary()" function.
-7) Download available cash information with the "Available_Cash()" function.
-8) Download investor notes owned information with the "Notes()" function.
-9) Download investor loans information with the "Loans()" function.
-10) Upload a list of Orders with the "Create_Orders()" function.
-11) Download a payments report with the "Payments()" function.
-12) Download a pending transfers report with the "Pending_Transfer()" function.
-13) Download a list of investor portfolios with the "Portfolios()" function.
-14) Upload investor portfolios via the prosper.com API with the "Create_Portfolio()" function. 
+3) Obtain a prosper.com API access token with the "Token_Request()" function.
+4) Obtain authorization to access the prosper.com API with the "Authorization()" function.
+5) Download account information with the "Account_Summary()" function.
+6) Download investor notes owned information with the "Notes()" function.
+7) Download investor loans information with the "Loans()" function.
+8) Upload a list of Orders with the "Create_Orders()" function.
+9) Download a payments report with the "Payments()" function.
+10) Download a pending transfers report with the "Pending_Transfer()" function.
+11) Download a list of investor portfolios with the "Portfolios()" function.
+12) Upload investor portfolios via the prosper.com API with the "Create_Portfolio()" function. 
