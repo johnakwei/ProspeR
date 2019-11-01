@@ -40,8 +40,8 @@ Creates Portfolios
 Prosper R Package functions:
 Access_Header()
 Access_Data()
-Verify_Credentials()
 Token_Request()
+Token_Request2()
 Authorization()
 Account_Summary()
 Available_Cash()
@@ -56,11 +56,9 @@ Create_Portfolio()
 Instructions:
 Format "header" information with the "Access_Header()" function.
 Format investor data with the "Access_Data()" function.
-"Verify_Credentials()" is a functions to verify "header" and "investor data" accuracy.
 Obtain a prosper.com API token with the "Token_Request()" function.
 Obtain authorization to access the prosper.com API with the "Authorization()" function.
 Download account information with the "Account_Summary()" function.
-Download available cash information with the "Available_Cash()" function.
 Download investor notes owned information with the "Notes()" function.
 Download investor loans information with the "Loans()" function.
 Upload a list of Orders with the "Create_Orders()" function.
@@ -117,55 +115,6 @@ Access_Data <- function(investorID, investorSecret,
 ##################################################
 ##################################################
 ##
-## Verify_Credentials.R
-##
-##################################################
-##################################################
-
-Check_Header <- function(x = NULL){
-  # If "header" is null, then a value was not passed in
-  # the calling function. If it isn't null, then return it.
-  if(!is.null(x)) {
-    return(x)
-    } else {
-      stop("Please create the header object using the AccessHeader() function",
-           call.= FALSE)
-    }
-  # If header is null, then check if it exists in the global
-  # environment
-  if (!exists("header", envir= .GlobalEnv)){
-    stop("Please create the header object using the AccessHeader() function",
-         call.= FALSE)
-  }
-  get("header")
-}
-
-# Example
-# Check_Header(header)
-
-Check_Data <- function(x = NULL){
-  # If data is null, then a value was not passed in the calling
-  # function. If it isn't null, then return it.
-  if(!is.null(x)) {
-     return(x)
-    } else {
-      stop("Please create the data object using the AccessData() function",
-           call.= FALSE)
-    }
-  # If data is null, then check if it exists in the global environment
-  if (!exists("data", envir= .GlobalEnv)){
-    stop("Please create the data object using the AccessData() function",
-         call.= FALSE)
-  }
-  get("data")
-}
-
-# Example
-# Check_Data(data)
-
-##################################################
-##################################################
-##
 ## Token_Request.R
 ##
 ##################################################
@@ -187,13 +136,10 @@ Token_Request <- function(requestURL, requestHeader, data){
                                    user_params = data)
   
   if(status_code(prosper_token)!=200){
-    stop("Prosper API Token Request Failed", status_code(prosper_token))}
+    stop("Prosper API Token Request Failed",
+         status_code(prosper_token))}
   
-  parsed <- fromJSON(content(prosper_token, "text", encoding="UTF-8"),
-                     simplifyVector = TRUE)
-  
-  structure(list(content = parsed, response = prosper_token),
-            class = "Prosper_API")
+  prosper_token
 }
 
 # Example
@@ -207,7 +153,54 @@ Token_Request <- function(requestURL, requestHeader, data){
 # payload <- AccessData(client_id, client_secret, username,
 #                    password)
 #
-# AuthorizationKey <- Token_Request(Request_URL, header, payload)
+# TokenKey <- Token_Request(Request_URL, header, payload)
+
+##################################################
+##################################################
+##
+## Token_Request2.R
+##
+##################################################
+##################################################
+
+# A function to obtain the token for Prosper API authorization.
+
+# "requestURL", the prosper.com token request url, i.e. "https://api.prosper.com/v1/security/oauth/token"
+# "requestHeader", the request header from "Access_Header()"
+# "data", a dataframe created with "Access_Data()"
+
+Token_Request2 <- function(requestURL, requestHeader, data){
+  
+  # API Call to get the access token
+  prosper_token <- POST(
+    url = auth.url,
+    add_headers(.headers = c('accept'= 'application/json',
+                             'content-type'= 'application/x-www-form-urlencoded')),
+    query = list(grant_type=data[1],
+                 client_id=data[2],
+                 client_secret=data[3],
+                 username=data[4],
+                 password=data[5]))
+  
+  if(status_code(prosper_token)!=200){
+    stop("Prosper API Token Request Failed",
+         status_code(prosper_token))}
+  
+  prosper_token
+}
+
+# Example
+#
+# Request_URL <- "https://api.prosper.com/v1/security/oauth/token"
+# header <- Access_Header()
+# clientid <- "<prosper.com client id>"
+# clientsecret <- "<prosper.com client secret>"
+# clientusername <- "<prosper.com username>"
+# clientpassword <- "<prosper.com password>"
+# payload <- AccessData(client_id, client_secret, username,
+#                    password)
+#
+# TokenKey <- Token_Request2(Request_URL, header, payload)
 
 ##################################################
 ##################################################
@@ -218,24 +211,34 @@ Token_Request <- function(requestURL, requestHeader, data){
 ##################################################
 
 # A function to obtain the authorization key for access to the Prosper API.
-# "authKey", a prosper authorization key from "Token_Request.R"
+# "authKey", a prosper access token from "Token_Request.R"
 
-Authorization <- function(authKey){
-  response <- POST(paste0("https://api.prosper.com/v1/", authKey, sep = ""))
+Authorization <- function(tokenKey){
+  
+  access_token <- content(tokenKey)$access_token
+  
+  authorization.header <- paste('bearer', access_token)
+  
+  response <- GET(paste0("https://api.prosper.com/v1/accounts/prosper/",
+                          tokenKey, sep = ""),
+                  add_headers('accept'= 'application/json',
+                              'content-type'= 'application/x-www-form-urlencoded',
+                              'Authorization'= authorization.header),
+                  query = list(offset='25', limit=10))
   
   if (httr::http_error(response)) {
     stop(sprintf("Authorization failed [%s]\n%s\n<%s>",
                  status_code(response), parsed$message, parsed$documentation_url
     ), call. = FALSE)}
   
-  response
+  content(response)
 }
 
 
 # Example
 #
-# auth <- "<authoriztion key>"
-# AuthoriztionKey <- Authorization(authKey)
+# token <- "<token key>"
+# AuthoriztionKey <- Authorization(token)
 
 ##################################################
 ##################################################
