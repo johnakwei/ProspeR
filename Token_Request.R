@@ -42,4 +42,4 @@ Token_Request <- function(requestURL, requestHeader, data){
 # payload <- AccessData(client_id, client_secret, username,
 #                    password)
 #
-# AuthorizationKey <- Token_Request(Request_URL, header, payload)
+# TokenKey <- Token_Request(Request_URL, header, payload)
