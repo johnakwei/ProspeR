@@ -23,5 +23,5 @@ Authorization <- function(authKey){
 
 # Example
 #
-# auth <- "<authoriztion key>"
+# auth <- "<token key>"
 # AuthoriztionKey <- Authorization(authKey)
